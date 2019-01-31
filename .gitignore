@@ -4,3 +4,6 @@ Data/*
 *.png
 *.eps
 *.h5
+
+/.idea/
+.idea/workspace.xml
