@@ -52,7 +52,7 @@ def preprocess(images):
         X = np.transpose(X, (1,2,0))
         Y = np.expand_dims(X, axis=0)
         images_out.append(Y)
-    return images_cropped#images_out#
+    return images_out#images_cropped#
 
 
 def get_data(dataset, directory, img_directory):

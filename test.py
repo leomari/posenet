@@ -2,6 +2,7 @@ import math
 import helper
 import posenet
 import numpy as np
+import pickle
 from keras.optimizers import Adam
 np.set_printoptions(threshold=np.nan)
 import matplotlib.pyplot as plt
@@ -17,7 +18,7 @@ def quat_to_euler(q):
 if __name__ == "__main__":
     # Test model
     model = posenet.create_posenet()
-    model.load_weights('copy_custom_trained_weights.h5')
+    model.load_weights('train5.h5')
     adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0, clipvalue=2.0)
     model.compile(optimizer=adam, loss={'cls1_fc_pose_xyz': posenet.euc_loss1x, 'cls1_fc_pose_wpqr': posenet.euc_loss1q,
                                         'cls2_fc_pose_xyz': posenet.euc_loss2x, 'cls2_fc_pose_wpqr': posenet.euc_loss2q,
@@ -25,7 +26,6 @@ if __name__ == "__main__":
 
     #dataset_train, dataset_test = helper.getKings()
     dataset_train, dataset_test = helper.getBlender()
-
 
     X_test = np.squeeze(np.array(dataset_test.images))
     y_test = np.squeeze(np.array(dataset_test.poses))
@@ -48,6 +48,27 @@ if __name__ == "__main__":
     surge_error = []
     sway_error = []
     heave_error = []
+
+    results = {
+        'true': {'ID': [], 'q': [], 'ea': [],  'tvec': []},
+        'pred': {'ID': [], 'q': [], 'ea': [], 'tvec': []},
+        'undetected': []}
+
+    for i in range(len(dataset_test.images)):
+        q = np.asarray(dataset_test.poses[i][3:7])
+        results['true']['ID'].append("data_{}".format(i))
+        results['true']['q'].append(q)
+        results['true']['ea'].append(quat_to_euler(q))
+        results['true']['tvec'].append(np.asarray(dataset_test.poses[i][0:3]))
+
+        results['pred']['ID'].append("data_{}".format(i))
+        results['pred']['q'].append(valsq[i])
+        results['pred']['ea'].append(quat_to_euler(valsq[i]))
+        results['pred']['tvec'].append(valsx[i])
+
+    with open('tracking_results.pkl', 'wb') as f:
+        pickle.dump(results, f)
+
     with open("results.txt", "w") as my_output_file:
         results = np.zeros((len(dataset_test.images), 2))
         for i in range(len(dataset_test.images)):
@@ -104,38 +125,32 @@ if __name__ == "__main__":
     print('Avergae translational error ', np.average(errors_x), 'm and rotation error ', np.average(errors_q), 'deg ' \
         ' and rotation 2 error ', np.average(thetas), ' deg.')
 
+    #Calculate 6DOF errors
+    roll_avg = np.average(roll_error)
+    pitch_avg = np.average(pitch_error)
+    yaw_avg = np.average(yaw_error)
+
+    surge_avg = np.average(surge_error)
+    sway_avg = np.average(sway_error)
+    heave_avg = np.average(heave_error)
+
+
+
+
 
     plt.figure(1, figsize=(10, 5))
-    plt.subplot(131)
+    plt.subplot(121)
     plt.hist(errors_x, bins = 50)
     plt.xlabel("Translation error [m]")
     plt.title("Translation error")
 
-    plt.subplot(132)
-    plt.hist(errors_q, bins = 50)
-    plt.xlabel("Rotation error [deg]")
-    plt.title("Rotation error ")
 
-    plt.subplot(133)
+    plt.subplot(122)
     plt.hist(thetas, bins=50)
     plt.xlabel("Rotation error2 [deg]")
     plt.title("Rotation error 2")
 
     plt.suptitle("Performance of CNN PoseNet estimator, on Blender dataset", fontsize = 16)
-
-
-    plt.figure(2, figsize=(10, 5))
-    plt.subplot(121)
-    plt.hist(errors_x, bins=50)
-    plt.xlabel("Translation error [m]")
-    plt.title("Translation error")
-
-    plt.subplot(122)
-    plt.hist(errors_q, bins=50)
-    plt.xlabel("Rotation error [deg]")
-    plt.title("Rotation error")
-
-    plt.suptitle("Performance of CNN PoseNet estimator, on Blender dataset", fontsize=16)
 
     plt.figure(2, figsize=(20, 15))
     plt.subplot(231)

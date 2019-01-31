@@ -43,7 +43,6 @@ def euc_loss3q(y_true, y_pred):
     return (500 * lq)
 
 
-
 def create_posenet(weights_path=None, tune=False):
     # creates Posenet from GoogLeNet a.k.a. Inception v1 (Szegedy, 2015)
     with tf.device('/cpu:0'):

@@ -10,9 +10,9 @@ if __name__ == "__main__":
     batch_size = 75
 
     # Train model
-    #model = posenet.create_posenet('posenet.npy', True) # GoogLeNet (Trained on Places)
-    model = posenet.create_posenet()
-    model.load_weights('trained_weights.h5')
+    model = posenet.create_posenet('posenet.npy', True) # GoogLeNet (Trained on Places)
+    #model = posenet.create_posenet()
+    #model.load_weights('trained_weights.h5')
     adam = Adam(lr=0.001, clipvalue=1.5)
     model.compile(optimizer=adam, loss={'cls1_fc_pose_xyz': posenet.euc_loss1x, 'cls1_fc_pose_wpqr': posenet.euc_loss1q,
                                         'cls2_fc_pose_xyz': posenet.euc_loss2x, 'cls2_fc_pose_wpqr': posenet.euc_loss2q,
@@ -42,4 +42,4 @@ if __name__ == "__main__":
           validation_data=(X_test, [y_test_x, y_test_q, y_test_x, y_test_q, y_test_x, y_test_q]),
           callbacks=[checkpointer])
 
-    model.save_weights("custom_trained_weights.h5")
+    model.save_weights("train5.h5")
